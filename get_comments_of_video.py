@@ -20,10 +20,11 @@ def findkeys(node, kv):
                 yield x
 
 
+# Returns status: [already_exists, no_comments, saved, disabled_comments, other_http_error]
 def save_youtube_comments(video_id):
 
     if os.path.exists('comments_raw/' + video_id + '.txt'):
-        print(video_id + ' already exists!')
+        return [1, 0, 0, 0, 0]
     else:
 
         try:
@@ -34,8 +35,8 @@ def save_youtube_comments(video_id):
             last_page_token = (comments.get('nextPageToken', None))
             comments = list(findkeys(comments, 'textDisplay'))
 
-            if (len(comments) == 0):
-                print('Len 0 for video ' + video_id)
+            if len(comments) == 0:
+                return [0, 1, 0, 0, 0]
             else:
 
                 file = open('comments_raw/' + video_id + '.txt', 'w')
@@ -43,9 +44,9 @@ def save_youtube_comments(video_id):
 
                 while last_page_token is not None:
                     comments = youtube_common.comment_threads_list_by_video_id(youtube_common.service,
-                                                                           part='snippet,replies',
-                                                                           videoId=video_id,
-                                                                           pageToken=last_page_token)
+                                                                               part='snippet,replies',
+                                                                               videoId=video_id,
+                                                                               pageToken=last_page_token)
 
                     last_page_token = (comments.get('nextPageToken', None))
                     comments = list(findkeys(comments, 'textDisplay'))
@@ -54,8 +55,11 @@ def save_youtube_comments(video_id):
 
                 file.close()
 
-                print(video_id + ' finished!')
+                return [0, 0, 1, 0, 0]
 
         except errors.HttpError as err:
-            print('Error!' + err.__str__())
-
+            if err.__str__().find('disabled comments'):
+                return [0, 0, 0, 1, 0]
+            else:
+                print('Error!' + err.__str__())
+                return [0, 0, 0, 0, 1]
