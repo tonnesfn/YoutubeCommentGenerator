@@ -35,7 +35,7 @@ def get_top_videos(number_of_videos):
 
     ids = list(findkeys(results, 'id'))
 
-    for _ in range(int(math.floor((number_of_videos/50)))):
+    for _ in range(int(math.floor((number_of_videos/50)))-1):
         last_page_token = (results.get('nextPageToken', None))
 
         results = videos_list_most_popular(youtube_common.service,

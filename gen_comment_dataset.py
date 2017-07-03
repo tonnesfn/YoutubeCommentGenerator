@@ -1,7 +1,7 @@
 import get_top_videos
 import get_comments_of_video
 
-number_of_top_videos = 1000
+number_of_top_videos = 200
 
 top_videos_to_get = get_top_videos.get_top_videos(number_of_top_videos)
 
