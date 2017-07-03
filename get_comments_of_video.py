@@ -20,38 +20,42 @@ def findkeys(node, kv):
                 yield x
 
 
-def save_youtube_comments(videoId):
+def save_youtube_comments(video_id):
 
-    if os.path.exists('comments/' + videoId + '.txt'):
-        print(videoId + ' already exists!')
+    if os.path.exists('comments_raw/' + video_id + '.txt'):
+        print(video_id + ' already exists!')
     else:
-        file = open('comments/' + videoId + '.txt', 'w')
 
         try:
             comments = youtube_common.comment_threads_list_by_video_id(youtube_common.service,
                                                                        part='snippet,replies',
-                                                                       videoId=videoId)
+                                                                       videoId=video_id)
 
             last_page_token = (comments.get('nextPageToken', None))
             comments = list(findkeys(comments, 'textDisplay'))
 
-            file.write('\n'.join(comments))
+            if (len(comments) == 0):
+                print('Len 0 for video ' + video_id)
+            else:
 
-            while last_page_token is not None:
-                comments = youtube_common.comment_threads_list_by_video_id(youtube_common.service,
+                file = open('comments_raw/' + video_id + '.txt', 'w')
+                file.write('\n'.join(comments).encode('ascii', 'ignore').decode('unicode_escape'))
+
+                while last_page_token is not None:
+                    comments = youtube_common.comment_threads_list_by_video_id(youtube_common.service,
                                                                            part='snippet,replies',
-                                                                           videoId=videoId,
+                                                                           videoId=video_id,
                                                                            pageToken=last_page_token)
 
-                last_page_token = (comments.get('nextPageToken', None))
-                comments = list(findkeys(comments, 'textDisplay'))
+                    last_page_token = (comments.get('nextPageToken', None))
+                    comments = list(findkeys(comments, 'textDisplay'))
 
-                file.write('\n'.join(comments))
+                    file.write('\n'.join(comments).encode('ascii', 'ignore').decode('unicode_escape'))
 
-            file.close()
+                file.close()
 
-            print(videoId + ' finished!')
+                print(video_id + ' finished!')
 
         except errors.HttpError as err:
-            print('Error! Deleting file: ' + 'comments/' + videoId + '.txt')
-            os.remove('comments/' + videoId + '.txt')
+            print('Error!' + err.__str__())
+
