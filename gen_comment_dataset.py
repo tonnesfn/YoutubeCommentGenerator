@@ -1,6 +1,8 @@
 import get_top_videos
 import get_comments_of_video
 
+skip_existing = True;
+
 number_of_top_videos = 200
 
 top_videos_to_get = get_top_videos.get_top_videos(number_of_top_videos)
@@ -8,8 +10,13 @@ top_videos_to_get = get_top_videos.get_top_videos(number_of_top_videos)
 # no_comments, already_exists, saved, disabled_comments, other_http_error
 statuses = []
 
+if skip_existing:
+    print('Starting crawling of top {} comments and skipping comments from existing videos\n'.format(number_of_top_videos))
+else:
+    print('Starting crawling of top {} comments and replacing existing comments\n'.format(number_of_top_videos))
+
 for i in range(len(top_videos_to_get)):
-    current_status = get_comments_of_video.save_youtube_comments(top_videos_to_get[i])
+    current_status = get_comments_of_video.save_youtube_comments(top_videos_to_get[i], skip_existing)
 
     if len(statuses) == 0:
         statuses = current_status
