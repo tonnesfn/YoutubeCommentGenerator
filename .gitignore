@@ -2,7 +2,8 @@
 __pycache__*
 .idea
 
-comments_raw/*
+data/*
+mergedComments.txt
 client_secrets.json
 youtube-api-snippets-oauth2.json
 

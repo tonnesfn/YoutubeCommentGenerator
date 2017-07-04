@@ -1,0 +1,1 @@
+sed -n p ./data/raw_comments/*.txt > ./data/mergedComments.txt

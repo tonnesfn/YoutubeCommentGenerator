@@ -34,7 +34,7 @@ def sanitize_comment(given_comment):
 # Returns status: [already_exists, no_comments, saved, disabled_comments, other_http_error]
 def save_youtube_comments(video_id, skip_existing=True):
 
-    if os.path.exists('comments_raw/' + video_id + '.txt') and skip_existing:
+    if os.path.exists('data/raw_comments/' + video_id + '.txt') and skip_existing:
         return [1, 0, 0, 0, 0]
     else:
 
@@ -50,7 +50,7 @@ def save_youtube_comments(video_id, skip_existing=True):
                 return [0, 1, 0, 0, 0]
             else:
 
-                file = open('comments_raw/' + video_id + '.txt', 'w')
+                file = open('data/raw_comments/' + video_id + '.txt', 'w')
                 file.write(sanitize_comment('\n'.join(comments)))
 
                 while last_page_token is not None:
