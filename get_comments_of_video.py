@@ -6,6 +6,7 @@ import html
 import youtube_common
 from googleapiclient import errors
 
+import unicodedata
 
 def findkeys(node, kv):
     if isinstance(node, list):
@@ -23,10 +24,10 @@ def findkeys(node, kv):
 def sanitize_comment(given_comment):
     given_comment = html.unescape(given_comment)  # Remove HTML characters
     given_comment = re.sub('<[^<]+>', "", given_comment)  # Remove XML
-    given_comment = re.sub(r'[^\x00-\x7f]', r' ', given_comment)  # Only ascii
     given_comment = re.sub(' +', ' ',given_comment)  # Remove double spaces
-    given_comment = re.sub(u'(?imu)^\s*\n', u'', given_comment)  # Remove empty lines
     given_comment = given_comment.replace(' \n', '\n').replace('\n ', '\n')  # Remove leading and trailing spaces
+    given_comment = unicodedata.normalize('NFKD', given_comment).encode('ascii', 'ignore').decode('utf-8')  # Filter out unicode
+    given_comment = re.sub(u'(?imu)^\s*\n', u'', given_comment)  # Remove empty lines
 
     return given_comment
 
