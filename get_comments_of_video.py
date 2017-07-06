@@ -8,6 +8,7 @@ from googleapiclient import errors
 
 import unicodedata
 
+
 def findkeys(node, kv):
     if isinstance(node, list):
         for i in node:

@@ -2,20 +2,21 @@ import math
 
 import youtube_common
 
-def videos_list_most_popular(service, **kwargs):
-  kwargs = youtube_common.remove_empty_kwargs(**kwargs) # See full sample for function
-  results = service.videos().list(
-    **kwargs
-  ).execute()
 
-  return results
+def videos_list_most_popular(service, **kwargs):
+    kwargs = youtube_common.remove_empty_kwargs(**kwargs)  # See full sample for function
+    results = service.videos().list(
+      **kwargs
+    ).execute()
+
+    return results
 
 
 def findkeys(node, kv):
     if isinstance(node, list):
         for i in node:
             for x in findkeys(i, kv):
-               yield x
+                yield x
     elif isinstance(node, dict):
         if kv in node:
             yield node[kv]
@@ -45,8 +46,6 @@ def get_top_videos(number_of_videos):
                                            videoCategoryId='',
                                            maxResults=50,
                                            pageToken=last_page_token)
-
-        last_page_token = (results.get('nextPageToken', None))
 
         ids = ids + list(findkeys(results, 'id'))
 

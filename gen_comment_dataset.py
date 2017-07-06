@@ -1,7 +1,7 @@
 import get_top_videos
 import get_comments_of_video
 
-skip_existing = True;
+skip_existing = False
 
 number_of_top_videos = 200
 
