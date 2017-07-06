@@ -8,6 +8,7 @@ class Dataset:
     dictionary = {}
     longest_comment = 0
     num_examples = 0
+    max_comment_length = 300
 
     def gen_dict(self):
         self.dictionary = dict.fromkeys(''.join(self.comments), 0)
@@ -33,7 +34,11 @@ class Dataset:
     def getComments(self, filename):
         with open(filename) as f:
             content = f.readlines()
+
         self.comments = [x.strip() for x in content]
+
+        for i in range(len(self.comments)):
+            self.comments[i] = self.comments[i][:self.max_comment_length]
 
     # Return batch_size number of examples and labels
     def next_batch(self, batch_size):
@@ -57,7 +62,8 @@ class Dataset:
                 one_hot_encoding[self.dictionary[x[i][j]]] = 1
                 line.append(one_hot_encoding)
 
-            for j in range(self.longest_comment - len(x[i])):
+            # Pad until you reach full string length
+            for j in range(self.longest_comment - len(x[i]) + 1):
                 line.append(([0] * (len(self.dictionary))) + [1])  # Space for full dictionary plus padding
 
             features.append(line[:-1])

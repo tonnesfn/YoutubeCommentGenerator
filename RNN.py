@@ -12,13 +12,17 @@ dataset = gen_dataset.Dataset()
 
 hm_epochs = 5
 n_classes = len(dataset.dictionary)+1
-batch_size = 128
+batch_size = 8
 chunk_size = len(dataset.dictionary)+1
 n_chunks = dataset.longest_comment
-rnn_size = 64
+rnn_size = 128
+
+print('Dictionary size: {}'.format(len(dataset.dictionary)))
+print('Longest comment: {}'.format(dataset.longest_comment))
 
 x = tf.placeholder('float', [None, n_chunks, chunk_size])
 y = tf.placeholder('float')
+#y = tf.placeholder('float', [None, n_chunks, chunk_size])
 
 
 def recurrent_neural_network(x):
@@ -32,9 +36,14 @@ def recurrent_neural_network(x):
     lstm_cell = rnn_cell.BasicLSTMCell(rnn_size)
     outputs, states = rnn.static_rnn(lstm_cell, x, dtype=tf.float32)
 
-    output = tf.matmul(outputs[-1], layer['weights']) + layer['biases']
+    output = []
 
-    return output
+    for i in range(len(outputs)):
+        output.append(tf.matmul(outputs[i], layer['weights']) + layer['biases'])
+
+    output_return = tf.reshape(tf.concat(axis=1, values=outputs), [-1, chunk_size])
+
+    return output_return
 
 
 def train_neural_network(x):
@@ -42,11 +51,7 @@ def train_neural_network(x):
     cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=prediction, labels=y))
     optimizer = tf.train.AdamOptimizer().minimize(cost)
 
-    config = tf.ConfigProto(
-        device_count={'GPU': 0}
-    )
-
-    with tf.Session(config=config) as sess:
+    with tf.Session() as sess:
 
         sess.run(tf.global_variables_initializer())
 
