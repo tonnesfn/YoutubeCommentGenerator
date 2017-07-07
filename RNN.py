@@ -1,3 +1,5 @@
+import numpy as np
+
 import tensorflow as tf
 from tensorflow.python.ops import rnn_cell
 from tensorflow.contrib import rnn
@@ -13,25 +15,25 @@ dataset = gen_dataset.Dataset()
 hm_epochs = 5
 n_classes = len(dataset.dictionary)+1
 batch_size = 8
-chunk_size = len(dataset.dictionary)+1
-n_chunks = dataset.longest_comment
+n_inputs = len(dataset.dictionary)+1  # Chunk_size
+n_outputs = len(dataset.dictionary)+1
+n_steps = dataset.longest_comment  # n_chunks
 rnn_size = 128
 
 print('Dictionary size: {}'.format(len(dataset.dictionary)))
 print('Longest comment: {}'.format(dataset.longest_comment))
 
-x = tf.placeholder('float', [None, n_chunks, chunk_size])
-y = tf.placeholder('float')
-#y = tf.placeholder('float', [None, n_chunks, chunk_size])
+x = tf.placeholder('float', [None, n_steps, n_inputs])
+y = tf.placeholder('float', [None, n_steps, n_outputs])
 
 
 def recurrent_neural_network(x):
     layer = {'weights': tf.Variable(tf.random_normal([rnn_size, n_classes])),
              'biases': tf.Variable(tf.random_normal([n_classes]))}
 
-    x = tf.transpose(x, [1, 0, 2])
-    x = tf.reshape(x, [-1, chunk_size])
-    x = tf.split(x, n_chunks, 0)
+    x = tf.transpose(x, [1, 0, 2])  # 300 * [?, 96]
+    x = tf.reshape(x, [-1, n_inputs])
+    x = tf.split(x, n_steps, 0)
 
     lstm_cell = rnn_cell.BasicLSTMCell(rnn_size)
     outputs, states = rnn.static_rnn(lstm_cell, x, dtype=tf.float32)
@@ -41,7 +43,7 @@ def recurrent_neural_network(x):
     for i in range(len(outputs)):
         output.append(tf.matmul(outputs[i], layer['weights']) + layer['biases'])
 
-    output_return = tf.reshape(tf.concat(axis=1, values=outputs), [-1, chunk_size])
+    output_return = tf.reshape(tf.concat(axis=1, values=output), [-1, n_inputs])  # [?, 96]
 
     return output_return
 
@@ -65,7 +67,8 @@ def train_neural_network(x):
 
             print('Epoch', epoch, 'completed out of', hm_epochs, 'loss:', epoch_loss)
 
-        correct = tf.equal(tf.argmax(prediction, 1), tf.argmax(y, 1))
+            dataset.current_batch_index = 0  # Reset batch index before next loop
 
+        correct = tf.equal(tf.argmax(prediction, 1), tf.argmax(y, 1))
 
 train_neural_network(x)
