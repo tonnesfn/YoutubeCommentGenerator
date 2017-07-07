@@ -77,4 +77,5 @@ def train_neural_network(x):
 
         correct = tf.equal(tf.argmax(prediction, 1), tf.argmax(y, 1))
 
-train_neural_network(x)
+if __name__ == "__main__":
+    train_neural_network(x)
