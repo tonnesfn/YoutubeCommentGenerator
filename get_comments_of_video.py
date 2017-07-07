@@ -1,6 +1,7 @@
 import os
 import os.path
 import re
+import sys
 
 import html
 import youtube_common
@@ -33,14 +34,26 @@ def sanitize_comment(given_comment):
     return given_comment
 
 
+def print_counter(counter):
+    if counter != 0:
+        print('\b' * 8, end='')
+    print('{}'.format(counter).ljust(8), end='')
+    sys.stdout.flush()
+
+    return counter + 1
+
+
 # Returns status: [already_exists, no_comments, saved, disabled_comments, other_http_error]
 def save_youtube_comments(video_id, skip_existing=True):
+    counter = 0;
 
     if os.path.exists('data/raw_comments/' + video_id + '.txt') and skip_existing:
         return [1, 0, 0, 0, 0]
     else:
 
         try:
+            counter = print_counter(counter)
+
             comments = youtube_common.comment_threads_list_by_video_id(youtube_common.service,
                                                                        part='snippet,replies',
                                                                        videoId=video_id)
@@ -56,6 +69,8 @@ def save_youtube_comments(video_id, skip_existing=True):
                 file.write(sanitize_comment('\n'.join(comments)))
 
                 while last_page_token is not None:
+                    counter = print_counter(counter)
+
                     comments = youtube_common.comment_threads_list_by_video_id(youtube_common.service,
                                                                                part='snippet,replies',
                                                                                videoId=video_id,
