@@ -2,6 +2,7 @@ import json
 import random
 import numpy as np
 
+
 class Dataset:
     current_batch_index = 0
     comments = []
@@ -9,6 +10,21 @@ class Dataset:
     longest_comment = 0
     num_examples = 0
     max_comment_length = 300
+
+    # Decodes a given one hot encoded list to a string
+    def decode(self, encoded_list):
+        decoded_string = ''
+
+        for character in encoded_list:
+            max_index = character.argmax()
+            c = [k for (k, v) in self.dictionary.items() if v == max_index]
+
+            if max_index == len(self.dictionary):
+                decoded_string += '§'
+            else:
+                decoded_string += c[0]
+
+        return decoded_string
 
     def gen_dict(self):
         self.dictionary = dict.fromkeys(''.join(self.comments), 0)
