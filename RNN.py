@@ -6,12 +6,15 @@ from tensorflow.contrib import rnn
 
 import gen_dataset
 
+import time
+
 
 class Model:
 
     dataset = gen_dataset.Dataset()
 
-    batch_size = 64
+    # 64: 152/s, 128: 178/s, 512: 198/s
+    batch_size = 512
     rnn_size = 512
     hm_epochs = 20
 
@@ -55,13 +58,29 @@ class Model:
 
             sess.run(tf.global_variables_initializer())
 
+            sample_counter = 0
+            loop_counter = 0
+            start_time = time.time()
             for epoch in range(self.hm_epochs):
                 epoch_loss = 0
+
                 for _ in range(int(self.dataset.num_examples / self.batch_size)):
                     epoch_x, epoch_y = self.dataset.next_batch(self.batch_size)
 
                     _, c = sess.run([optimizer, cost], feed_dict={x: epoch_x, self.y: epoch_y})
                     epoch_loss += c
+
+                    sample_counter += self.batch_size
+                    loop_counter += 1
+
+                    if loop_counter == 100:
+                        current_time = time.time()
+                        print('Time: {}s/sample - {}m/epoch'.format(
+                            int(sample_counter / (current_time - start_time)),
+                            int((self.dataset.num_examples / (int(sample_counter / (current_time - start_time))))/60)
+                            ), end='\r')
+
+                        loop_counter = 0
 
                 save_path = saver.save(sess, self.dataset.current_directory + '/models/model-{}-{}.ckpt'.format(epoch, int(epoch_loss)))
 
