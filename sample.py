@@ -3,6 +3,7 @@ import numpy as np
 import random
 import RNN
 
+
 class SampleGenerator:
     x = None
     y = None

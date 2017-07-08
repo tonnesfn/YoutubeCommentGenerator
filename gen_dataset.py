@@ -29,7 +29,7 @@ class Dataset:
 
         return decoded_string
 
-    def gen_dict(self, directory):
+    def gen_dict(self):
         print('Generated new dictionary:')
 
         self.dictionary = dict.fromkeys(''.join(self.comments), 0)
@@ -42,7 +42,10 @@ class Dataset:
         self.longest_comment = len(max(self.comments, key=len))
         self.num_examples = len(self.comments)
 
-        self.write_dict(directory, self.dictionary)
+        print('    longest_comment: {}\n'
+              '    num_examples: {}'.format(self.longest_comment, self.num_examples))
+
+        self.write_dict(self.current_directory, self.dictionary)
 
     # todo: make new folder if it does not exist
     def write_dict(self, directory, dictionary):
@@ -126,15 +129,15 @@ class Dataset:
 
     def generate_new_dataset(self):
         now = datetime.datetime.now()
-        current_directory = 'output/{:04d}{:02d}{:02d}{:02d}{:02d}'.\
+        self.current_directory = 'output/{:04d}{:02d}{:02d}{:02d}{:02d}'.\
             format(now.year, now.month, now.day, now.hour, now.minute)
 
-        self.makeDirectory(current_directory)
-        self.makeDirectory(current_directory+'/models')
+        self.makeDirectory(self.current_directory)
+        self.makeDirectory(self.current_directory+'/models')
 
         self.get_comments('data/mergedComments.txt')
 
-        self.gen_dict(current_directory)
+        self.gen_dict()
 
         random.shuffle(self.comments)
 
