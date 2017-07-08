@@ -2,7 +2,7 @@ import get_top_videos
 import get_comments_of_video
 
 # todo: make this into an argument passed at program launch
-skip_existing = False
+skip_existing = True
 
 number_of_top_videos = 200
 

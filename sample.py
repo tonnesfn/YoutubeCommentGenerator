@@ -24,7 +24,7 @@ config = tf.ConfigProto(
 )
 
 with tf.Session(config=config) as sess:
-    saver.restore(sess, "output/save_model/model-0-4952.ckpt")
+    saver.restore(sess, "output/save_model/model-7-3928.ckpt")
 
     for iteration in range(300):
         x_batch = np.array(sequence[-n_steps:]).reshape(1, n_steps, n_inputs)

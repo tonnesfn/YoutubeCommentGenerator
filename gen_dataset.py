@@ -27,27 +27,53 @@ class Dataset:
         return decoded_string
 
     def gen_dict(self):
+        print('Generated new dictionary:')
+
         self.dictionary = dict.fromkeys(''.join(self.comments), 0)
 
         index = 0
         for x in self.dictionary:
             self.dictionary[x] = index
             index = index + 1
+
+        self.longest_comment = len(max(self.comments, key=len))
+        self.num_examples = len(self.comments)
+
         self.write_dict('output/dict.json', self.dictionary)
 
     # todo: make new folder if it does not exist
     def write_dict(self, filename, dictionary):
         with open(filename, 'w') as f:
-            json.dump(dictionary, f)
+            json.dump(dictionary, f, indent=4)
+
+        settings = {'longest_comment': self.longest_comment, 'num_examples': self.num_examples,
+                    'max_comment_length': self.max_comment_length}
+
+        with open('output/settings.json', 'w') as f:
+            json.dump(settings, f, indent=4)
 
     def read_dict(self, filename):
         with open(filename, 'r') as f:
             try:
                 self.dictionary = json.load(f)
             except ValueError:
+                print('Error reading dictionary JSON file!')
                 self.dictionary = {}
 
-    def getComments(self, filename):
+        with open('output/settings.json', 'r') as f:
+            try:
+                settings = json.load(f)
+
+                self.longest_comment = settings['longest_comment']
+                self.num_examples = settings['num_examples']
+                self.max_comment_length = settings['max_comment_length']
+
+                print('Read settings file: longest: {}, num_examples: {}, max_comment_length: {}'.
+                      format(self.longest_comment, self.num_examples, self.max_comment_length))
+            except ValueError:
+                print('Error reading settings JSON file!')
+
+    def get_comments(self, filename):
         with open(filename) as f:
             content = f.readlines()
 
@@ -85,27 +111,17 @@ class Dataset:
             features.append(line[:-1])
             labels.append(line[1:])
 
-        # # Debug writing to file:
-        # f = open('batch_debugging_inputs.txt', 'w')
-        # f.writelines(["%s\n" % item for item in self.comments[start:end]])
-        # f.close()
-        #
-        # f = open('batch_debugging_result.txt', 'w')
-        # f.writelines(["%s\n" % item for item in features])
-        # f.close()
-
         features = np.array(features)
         labels = np.array(labels)
 
         self.current_batch_index += 1
         return features, labels
 
-    def __init__(self):
-        self.getComments('data/mergedComments.txt')
-        random.shuffle(self.comments)
+    def generate_new_dataset(self):
+        self.get_comments('data/mergedComments.txt')
         self.gen_dict()
-        self.longest_comment = len(max(self.comments, key=len))
-        self.num_examples = len(self.comments)
+        random.shuffle(self.comments)
 
-#dataset = Dataset()
-#dataset.comments = dataset.comments[:11]
+    def restore_dataset(self):
+        self.read_dict('output/dict.json')
+

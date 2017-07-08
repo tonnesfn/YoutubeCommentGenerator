@@ -12,16 +12,22 @@ import gen_dataset
 
 dataset = gen_dataset.Dataset()
 
-hm_epochs = 5
+# If this file is run, make new dataset. If not, load current
+if __name__ == "__main__":
+    dataset.generate_new_dataset()
+else:
+    dataset.restore_dataset()
+
+hm_epochs = 20
 n_classes = len(dataset.dictionary)+1
-batch_size = 8
+batch_size = 64
 n_inputs = len(dataset.dictionary)+1  # Chunk_size
 n_outputs = len(dataset.dictionary)+1
 n_steps = dataset.longest_comment  # n_chunks
-rnn_size = 128
+rnn_size = 512
 
-print('Dictionary size: {}'.format(len(dataset.dictionary)))
-print('Longest comment: {}'.format(dataset.longest_comment))
+print('    Dictionary size: {}'.format(len(dataset.dictionary)))
+print('    Longest comment: {}'.format(dataset.longest_comment))
 
 x = tf.placeholder('float', [None, n_steps, n_inputs])
 y = tf.placeholder('float', [None, n_steps, n_outputs])
