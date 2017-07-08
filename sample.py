@@ -1,37 +1,59 @@
 import tensorflow as tf
 import numpy as np
-import RNN
 import random
+import RNN
 
-x = tf.placeholder('float', [None, RNN.n_steps, RNN.n_inputs])
-y = tf.placeholder('float', [None, RNN.n_steps, RNN.n_outputs])
+class SampleGenerator:
+    x = None
+    y = None
 
-prediction = RNN.recurrent_neural_network(x)
+    saver = None
 
-saver = tf.train.Saver()
+    model = None
+    network = None
 
-n_steps = 300
-n_inputs = RNN.n_inputs
+    directory = 'output/201707081558'
 
-sequence = np.array([[0] * (len(RNN.dataset.dictionary) + 1)] * n_steps)
-for i in range(len(sequence)):
-    sequence[i][random.randint(0, len(RNN.dataset.dictionary))] = 1
+    def get_prediction(self):
 
-sequence[-1] = np.array([[0] * (len(RNN.dataset.dictionary) + 1)])
+        sequence = np.array([[0] * (len(self.model.dataset.dictionary) + 1)] * self.model.n_steps)
+        for i in range(len(sequence)):
+            sequence[i][random.randint(0, len(self.model.dataset.dictionary))] = 1
 
-config = tf.ConfigProto(
-    device_count={'GPU': 0}
-)
+        sequence[-1] = np.array([[0] * (len(self.model.dataset.dictionary) + 1)])
 
-with tf.Session(config=config) as sess:
-    saver.restore(sess, "output/save_model/model-7-3928.ckpt")
+        print('Running tensorflow in CPU mode')
+        config = tf.ConfigProto(
+            device_count={'GPU': 0}
+        )
 
-    for iteration in range(300):
-        x_batch = np.array(sequence[-n_steps:]).reshape(1, n_steps, n_inputs)
-        y_pred = sess.run(prediction, feed_dict={x: x_batch})
+        with tf.Session(config=config) as sess:
+            self.saver.restore(sess, "output/201707081114/models/model-7-3928.ckpt")
 
-        sequence = np.vstack([sequence, y_pred[-1]])
+            for iteration in range(300):
+                x_batch = np.array(sequence[-self.model.n_steps:]).reshape(1, self.model.n_steps, self.model.n_inputs)
+                y_pred = sess.run(self.network, feed_dict={self.x: x_batch})
 
-    output_string = RNN.dataset.decode(sequence[-300:])
+                sequence = np.vstack([sequence, y_pred[-1]])
 
-    print(output_string)
+            output_string = RNN.dataset.decode(sequence[-300:])
+
+            return output_string
+
+    def print_sample(self):
+        print(self.get_prediction())
+
+    def __init__(self):
+        self.model = RNN.Model()
+        self.model.restore_dataset(self.directory)
+
+        self.x = tf.placeholder('float', [None, self.model.n_steps, self.model.n_inputs])
+        self.y = tf.placeholder('float', [None, self.model.n_steps, self.model.n_outputs])
+
+        self.network = self.model.recurrent_neural_network(self.x)
+
+        self.saver = tf.train.Saver()
+
+if __name__ == "__main__":
+    sampleGenerator = SampleGenerator()
+    sampleGenerator.print_sample()

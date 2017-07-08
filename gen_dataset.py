@@ -63,7 +63,7 @@ class Dataset:
                 print('Error reading dictionary JSON file!')
                 self.dictionary = {}
 
-        with open('output/settings.json', 'r') as f:
+        with open(self.current_directory + '/settings.json', 'r') as f:
             try:
                 settings = json.load(f)
 
@@ -138,6 +138,7 @@ class Dataset:
 
         random.shuffle(self.comments)
 
-    def restore_dataset(self):
-        self.read_dict('output/dict.json')
+    def restore_dataset(self, directory):
+        self.current_directory = directory
+        self.read_dict(self.current_directory + '/dict.json')
 

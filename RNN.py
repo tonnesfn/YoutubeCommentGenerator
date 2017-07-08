@@ -92,8 +92,8 @@ class Model:
         self.dataset.generate_new_dataset()
         self.init_dataset()
 
-    def restore_dataset(self):
-        self.dataset.restore_dataset()
+    def restore_dataset(self, directory):
+        self.dataset.restore_dataset(directory)
         self.init_dataset()
 
 if __name__ == "__main__":
