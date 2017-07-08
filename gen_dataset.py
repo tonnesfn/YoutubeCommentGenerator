@@ -1,5 +1,7 @@
 import json
 import random
+import datetime
+import os
 import numpy as np
 
 
@@ -10,6 +12,7 @@ class Dataset:
     longest_comment = 0
     num_examples = 0
     max_comment_length = 300
+    current_directory = ''
 
     # Decodes a given one hot encoded list to a string
     def decode(self, encoded_list):
@@ -26,7 +29,7 @@ class Dataset:
 
         return decoded_string
 
-    def gen_dict(self):
+    def gen_dict(self, directory):
         print('Generated new dictionary:')
 
         self.dictionary = dict.fromkeys(''.join(self.comments), 0)
@@ -39,17 +42,17 @@ class Dataset:
         self.longest_comment = len(max(self.comments, key=len))
         self.num_examples = len(self.comments)
 
-        self.write_dict('output/dict.json', self.dictionary)
+        self.write_dict(directory, self.dictionary)
 
     # todo: make new folder if it does not exist
-    def write_dict(self, filename, dictionary):
-        with open(filename, 'w') as f:
+    def write_dict(self, directory, dictionary):
+        with open(directory + '/dict.json', 'w') as f:
             json.dump(dictionary, f, indent=4)
 
         settings = {'longest_comment': self.longest_comment, 'num_examples': self.num_examples,
                     'max_comment_length': self.max_comment_length}
 
-        with open('output/settings.json', 'w') as f:
+        with open(directory + '/settings.json', 'w') as f:
             json.dump(settings, f, indent=4)
 
     def read_dict(self, filename):
@@ -117,9 +120,22 @@ class Dataset:
         self.current_batch_index += 1
         return features, labels
 
+    def makeDirectory(self, directory_name):
+        if not os.path.exists(directory_name):
+            os.makedirs(directory_name)
+
     def generate_new_dataset(self):
+        now = datetime.datetime.now()
+        current_directory = 'output/{:04d}{:02d}{:02d}{:02d}{:02d}'.\
+            format(now.year, now.month, now.day, now.hour, now.minute)
+
+        self.makeDirectory(current_directory)
+        self.makeDirectory(current_directory+'/models')
+
         self.get_comments('data/mergedComments.txt')
-        self.gen_dict()
+
+        self.gen_dict(current_directory)
+
         random.shuffle(self.comments)
 
     def restore_dataset(self):

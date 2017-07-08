@@ -74,7 +74,7 @@ def train_neural_network(x):
                 _, c = sess.run([optimizer, cost], feed_dict={x: epoch_x, y: epoch_y})
                 epoch_loss += c
 
-            save_path = saver.save(sess, 'output/save_model/model-{}-{}.ckpt'.format(epoch, int(epoch_loss)))
+            save_path = saver.save(sess, dataset.current_directory + '/models/model-{}-{}.ckpt'.format(epoch, int(epoch_loss)))
 
             print('Epoch', epoch, 'completed out of', hm_epochs, 'loss:', epoch_loss)
             print('Model saved in file: ', save_path)
