@@ -7,7 +7,7 @@ from tensorflow.contrib import rnn
 import gen_dataset
 
 import time
-
+import os
 
 class Model:
 
@@ -17,6 +17,7 @@ class Model:
     batch_size = 512
     rnn_size = 512
     hm_epochs = 20
+    current_epoch = 0
 
     n_classes = None
     n_inputs = None
@@ -26,13 +27,13 @@ class Model:
     x = None
     y = None
 
-    def recurrent_neural_network(self):
+    def recurrent_neural_network(self, x):
         layer = {'weights': tf.Variable(tf.random_normal([self.rnn_size, self.n_classes])),
                  'biases': tf.Variable(tf.random_normal([self.n_classes]))}
 
-        self.x = tf.transpose(x, [1, 0, 2])  # 300 * [?, 96]
-        self.x = tf.reshape(x, [-1, self.n_inputs])
-        self.x = tf.split(x, self.n_steps, 0)
+        x = tf.transpose(x, [1, 0, 2])  # 300 * [?, 96]
+        x = tf.reshape(x, [-1, self.n_inputs])
+        x = tf.split(x, self.n_steps, 0)
 
         lstm_cell = rnn_cell.BasicLSTMCell(self.rnn_size)
         outputs, states = rnn.static_rnn(lstm_cell, x, dtype=tf.float32)
@@ -51,8 +52,8 @@ class Model:
         with tf.Session() as sess:
 
             if len(saved_state_file) == 0:
-                prediction = self.recurrent_neural_network(self.x)
-                saver = tf.train.Saver()
+                prediction = self.recurrent_neural_network(x)
+                saver = tf.train.Saver(max_to_keep=25)
 
                 cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=prediction, labels=self.y))
                 optimizer = tf.train.AdamOptimizer().minimize(cost)
@@ -74,7 +75,7 @@ class Model:
             sample_counter = 0
             loop_counter = 0
             start_time = time.time()
-            for epoch in range(self.hm_epochs):
+            for _ in range(self.hm_epochs):
                 epoch_loss = 0
 
                 for _ in range(int(self.dataset.num_examples / self.batch_size)):
@@ -95,12 +96,14 @@ class Model:
 
                         loop_counter = 0
 
-                save_path = saver.save(sess, self.dataset.current_directory + '/models/model-{}-{}.ckpt'.format(epoch, int(epoch_loss)))
+                save_path = saver.save(sess, self.dataset.current_directory + '/models/model-{}-{}.ckpt'
+                                       .format(self.current_epoch, int(epoch_loss)))
 
-                print('Epoch', epoch, 'completed out of', self.hm_epochs, 'loss:', epoch_loss)
+                print('Epoch', self.current_epoch, 'completed out of', self.hm_epochs, 'loss:', epoch_loss)
                 print('Model saved in file: ', save_path)
 
                 self.dataset.current_batch_index = 0  # Reset batch index before next loop
+                self.current_epoch += 1
 
     def train(self, cont_file):
         self.train_neural_network(self.x, cont_file)
@@ -117,19 +120,18 @@ class Model:
               '    n_outputs: {}\n'
               '    n_steps: {}'.format(self.n_classes, self.n_inputs, self.n_outputs, self.n_steps))
 
-        #self.x = tf.placeholder('float', [None, self.n_steps, self.n_inputs], name='x')
-        #self.y = tf.placeholder('float', [None, self.n_steps, self.n_outputs], name='y')
-
     def init_new_dataset(self):
         self.dataset.generate_new_dataset()
         self.init_dataset()
+        self.x = tf.placeholder('float', [None, self.n_steps, self.n_inputs], name='x')
+        self.y = tf.placeholder('float', [None, self.n_steps, self.n_outputs], name='y')
 
     def restore_dataset(self, directory):
         self.dataset.restore_dataset(directory)
         self.init_dataset()
 
 if __name__ == "__main__":
-    cont_file = 'output/201707090024/models/model-10-868'
+    cont_file = 'output/201707090024/models/model-6-568'
     #cont_file = ''
     cont_file_directory = '/'.join(cont_file.split('/')[0:-1])
     output_directory = '/'.join(cont_file_directory.split('/')[0:-1])
@@ -138,6 +140,12 @@ if __name__ == "__main__":
 
     if len(cont_file) > 0:
         model.restore_dataset(output_directory)
+
+        # Set epoch length from previous model files:
+        files = [f for f in os.listdir(output_directory + '/models/') if os.path.isfile(os.path.join(output_directory + '/models/', f))]
+        model.current_epoch = int(files[-1].split('-')[1]) + 1
+
+        print('Resuming previous run. Now starting epoch {}'.format(model.current_epoch))
     else:
         model.init_new_dataset()
 

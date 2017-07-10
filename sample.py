@@ -29,7 +29,7 @@ class SampleGenerator:
         )
 
         with tf.Session(config=config) as sess:
-            self.saver.restore(sess, "output/201707090024/models/model-10-868.ckpt")
+            self.saver.restore(sess, "output/201707090024/models/model-6-568.ckpt")
 
             for iteration in range(300):
                 x_batch = np.array(sequence[-self.model.n_steps:]).reshape(1, self.model.n_steps, self.model.n_inputs)
