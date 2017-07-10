@@ -13,7 +13,7 @@ class SampleGenerator:
     model = None
     network = None
 
-    directory = 'output/201707081558'
+    directory = 'output/201707090024'
 
     def get_prediction(self):
 
@@ -29,7 +29,7 @@ class SampleGenerator:
         )
 
         with tf.Session(config=config) as sess:
-            self.saver.restore(sess, "output/201707081114/models/model-7-3928.ckpt")
+            self.saver.restore(sess, "output/201707090024/models/model-10-868.ckpt")
 
             for iteration in range(300):
                 x_batch = np.array(sequence[-self.model.n_steps:]).reshape(1, self.model.n_steps, self.model.n_inputs)
@@ -37,7 +37,7 @@ class SampleGenerator:
 
                 sequence = np.vstack([sequence, y_pred[-1]])
 
-            output_string = RNN.dataset.decode(sequence[-300:])
+            output_string = self.model.dataset.decode(sequence[-300:])
 
             return output_string
 

@@ -143,5 +143,6 @@ class Dataset:
 
     def restore_dataset(self, directory):
         self.current_directory = directory
+        self.get_comments('data/mergedComments.txt')
         self.read_dict(self.current_directory + '/dict.json')
 

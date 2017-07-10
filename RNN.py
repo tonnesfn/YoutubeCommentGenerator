@@ -26,13 +26,13 @@ class Model:
     x = None
     y = None
 
-    def recurrent_neural_network(self, x):
+    def recurrent_neural_network(self):
         layer = {'weights': tf.Variable(tf.random_normal([self.rnn_size, self.n_classes])),
                  'biases': tf.Variable(tf.random_normal([self.n_classes]))}
 
-        x = tf.transpose(x, [1, 0, 2])  # 300 * [?, 96]
-        x = tf.reshape(x, [-1, self.n_inputs])
-        x = tf.split(x, self.n_steps, 0)
+        self.x = tf.transpose(x, [1, 0, 2])  # 300 * [?, 96]
+        self.x = tf.reshape(x, [-1, self.n_inputs])
+        self.x = tf.split(x, self.n_steps, 0)
 
         lstm_cell = rnn_cell.BasicLSTMCell(self.rnn_size)
         outputs, states = rnn.static_rnn(lstm_cell, x, dtype=tf.float32)
@@ -51,19 +51,23 @@ class Model:
         with tf.Session() as sess:
 
             if len(saved_state_file) == 0:
-                prediction = self.recurrent_neural_network(x)
+                prediction = self.recurrent_neural_network(self.x)
                 saver = tf.train.Saver()
+
+                cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=prediction, labels=self.y))
+                optimizer = tf.train.AdamOptimizer().minimize(cost)
             else:
                 directory = '/'.join(cont_file.split('/')[0:-1])
                 saver = tf.train.import_meta_graph(saved_state_file + '.ckpt.meta')
                 saver.restore(sess, tf.train.latest_checkpoint(directory))
 
                 self.x = tf.get_default_graph().get_tensor_by_name('x:0')
+                x = self.x
                 self.y = tf.get_default_graph().get_tensor_by_name('y:0')
                 prediction = tf.get_default_graph().get_tensor_by_name('network_output:0')
 
-            cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=prediction, labels=self.y))
-            optimizer = tf.train.AdamOptimizer().minimize(cost)
+                cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=prediction, labels=self.y))
+                optimizer = tf.get_default_graph().get_operation_by_name('Adam')
 
             sess.run(tf.global_variables_initializer())
 
@@ -113,8 +117,8 @@ class Model:
               '    n_outputs: {}\n'
               '    n_steps: {}'.format(self.n_classes, self.n_inputs, self.n_outputs, self.n_steps))
 
-        self.x = tf.placeholder('float', [None, self.n_steps, self.n_inputs], name='x')
-        self.y = tf.placeholder('float', [None, self.n_steps, self.n_outputs], name='y')
+        #self.x = tf.placeholder('float', [None, self.n_steps, self.n_inputs], name='x')
+        #self.y = tf.placeholder('float', [None, self.n_steps, self.n_outputs], name='y')
 
     def init_new_dataset(self):
         self.dataset.generate_new_dataset()
@@ -125,7 +129,7 @@ class Model:
         self.init_dataset()
 
 if __name__ == "__main__":
-    cont_file = 'output/201707082137/models/model-15-4'
+    cont_file = 'output/201707090024/models/model-10-868'
     #cont_file = ''
     cont_file_directory = '/'.join(cont_file.split('/')[0:-1])
     output_directory = '/'.join(cont_file_directory.split('/')[0:-1])
